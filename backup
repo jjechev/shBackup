@@ -1,0 +1,50 @@
+#!/bin/bash
+
+
+DIR="/home"
+TAR="/bin/tar"
+AWK="/usr/bin/awk"
+ARHIVEDIR="/home/ARHIVE"
+FILELIST="/root/scripts/backup/backupfilelist"
+BACKUPDAY="30" #days
+
+###########################################################################
+
+
+# ARHIVE HOME DIR
+
+DATE="$(date +%d%m%y)"
+
+for f in "$DIR"/*; do
+  
+    if [ "$f" == "$DIR/lost+found" ]; then 
+	continue
+    fi
+
+    if [ "$f" == "$DIR/ARHIVE" ]; then 
+	continue
+    fi
+
+    FILENAME="$f-$DATE"
+    NAME=`echo $FILENAME | $AWK -F/ '{print $3;}'`
+    `$TAR zcvf $ARHIVEDIR/$NAME.tgz $f 1>/dev/null 2>>/dev/null`
+done
+#### END ARHIVE HOME DIR
+
+#### ARHIVE FILE LIST
+
+while read line
+do
+    NAME=`echo $line | sed  "s/\//-/g"`
+    FILENAME="$NAME-$DATE"
+    `$TAR zcvf $ARHIVEDIR/$FILENAME.tgz $line 1>/dev/null 2>>/dev/null`
+
+done <$FILELIST
+
+#### END ARHIVE FILE LIST
+
+### DELETE OLD BACKUP
+
+`find /home/ARHIVE/* -type f -mtime +$BACKUPDAY -delete`
+
+##### END OF FILE
